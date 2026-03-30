@@ -18,9 +18,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .sh h1{font-size:17px;font-weight:800;background:linear-gradient(135deg,var(--acc),var(--grn));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:3px}
 .sh p{font-size:11px;color:var(--t3)}
 .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:10px 20px;border-bottom:1px solid var(--brd)}
-.st{text-align:center}
-.sv{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;color:var(--acc)}
-.sl{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-top:1px}
+.st{text-align:center}.sv{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;color:var(--acc)}.sl{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-top:1px}
 .tabs{display:flex;border-bottom:1px solid var(--brd)}
 .tab{flex:1;padding:9px;background:0;border:none;color:var(--t3);font-size:11px;font-family:inherit;font-weight:600;cursor:pointer;border-bottom:2px solid transparent}
 .tab:hover{color:var(--t2)}.tab.a{color:var(--acc);border-bottom-color:var(--acc)}
@@ -41,7 +39,6 @@ select.sb-input{cursor:pointer}
 .kn{font-size:12px;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kd{font-size:10px;color:var(--t3);font-family:'JetBrains Mono',monospace}
 .kv{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--grn);text-align:right;white-space:nowrap}
-/* Climate panel */
 .cp{padding:12px 20px;overflow-y:auto;flex:1}
 .cp-card{background:var(--card);border-radius:10px;padding:12px;margin-bottom:8px;border:1px solid var(--brd)}
 .cp-title{font-size:12px;font-weight:700;color:var(--acc);margin-bottom:8px}
@@ -60,11 +57,14 @@ select.sb-input{cursor:pointer}
 #map{position:fixed;left:400px;top:0;right:0;bottom:0;z-index:500;transition:left .3s}
 .sb.c~#map{left:0}
 .leaflet-popup-content-wrapper{background:var(--card)!important;border:1px solid var(--brd)!important;border-radius:10px!important;box-shadow:var(--sh)!important}
-.leaflet-popup-content{color:var(--t1)!important;font-family:'Plus Jakarta Sans',sans-serif!important;margin:12px 14px!important}
+.leaflet-popup-content{color:var(--t1)!important;font-family:'Plus Jakarta Sans',sans-serif!important;margin:12px 14px!important;min-width:220px}
 .leaflet-popup-tip{background:var(--card)!important}
 .pt{font-size:13px;font-weight:700;margin-bottom:6px;color:var(--acc)}
 .pr{display:flex;justify-content:space-between;padding:2px 0;font-size:11px}
 .pl{color:var(--t3)}.pv{font-family:'JetBrains Mono',monospace;font-weight:500}
+.p-divider{border-top:1px solid var(--brd);margin:6px 0}
+.p-section{font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;margin:4px 0 2px}
+.p-spi{font-size:10px;font-weight:600;padding:2px 6px;border-radius:8px;display:inline-block}
 .loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .4s}
 .loading.h{opacity:0;pointer-events:none}
 .spinner{width:36px;height:36px;border:3px solid var(--brd);border-top-color:var(--acc);border-radius:50%;animation:spin .8s linear infinite}
@@ -82,7 +82,6 @@ select.sb-input{cursor:pointer}
 <button class="tab a" data-t="sawah">🌾 Sawah</button>
 <button class="tab" data-t="iklim">🌧 Iklim</button>
 </div>
-<!-- TAB SAWAH -->
 <div class="tc a" id="t-sawah">
 <div class="fs">
 <div class="fl">Kab / Kota</div>
@@ -91,22 +90,20 @@ select.sb-input{cursor:pointer}
 </div>
 <div class="kl" id="kL"></div>
 </div>
-<!-- TAB IKLIM -->
 <div class="tc" id="t-iklim">
 <div class="fs">
 <div class="fl">Pilih Tahun</div>
 <select class="sb-input" id="selYear"></select>
 <div style="margin-top:8px">
-<div class="fl">Tampilkan Layer SPI</div>
+<div class="fl">Warnai Peta Berdasarkan</div>
 <div class="fg">
-<button class="fb" id="btnDJF" onclick="toggleSPI('djf')">DJF (Hujan)</button>
-<button class="fb" id="btnJJA" onclick="toggleSPI('jja')">JJA (Kemarau)</button>
+<button class="fb" id="btnColNone" onclick="setMapColor('none')">Kecamatan</button>
+<button class="fb" id="btnColDJF" onclick="setMapColor('djf')">SPI DJF</button>
+<button class="fb" id="btnColJJA" onclick="setMapColor('jja')">SPI JJA</button>
 </div>
 </div>
 </div>
-<div class="cp" id="cpanel">
-<div class="cp-card"><div class="cp-title">Pilih kecamatan di tab Sawah atau klik peta untuk melihat data iklim</div></div>
-</div>
+<div class="cp" id="cpanel"><div class="cp-card"><div class="cp-title">Pilih kecamatan di tab Sawah atau klik peta</div></div></div>
 <div class="legend">
 <div class="fl">Klasifikasi SPI</div>
 <div class="lg-item"><div class="lg-c" style="background:#730000"></div><span class="lg-r">≤ -2.0</span>Sangat Kering</div>
@@ -129,115 +126,119 @@ select.sb-input{cursor:pointer}
 <div id="map"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const C=['#22d3ee','#4ade80','#fbbf24','#f87171','#a78bfa','#fb923c','#34d399','#60a5fa','#f472b6','#a3e635','#e879f9','#38bdf8','#facc15','#2dd4bf','#c084fc','#fb7185','#84cc16','#818cf8','#f97316','#06b6d4','#10b981','#8b5cf6','#ef4444','#14b8a6','#eab308','#6366f1','#ec4899','#0ea5e9','#d946ef','#f59e0b','#3b82f6','#22c55e','#e11d48','#7c3aed','#0d9488','#ca8a04','#9333ea','#dc2626','#059669','#1d4ed8','#b91c1c','#15803d','#4338ca','#be185d','#0e7490','#854d0e','#6d28d9','#991b1b','#166534','#7c2d12','#9a3412'];
-function sC(v){if(v<=-2)return'#730000';if(v<=-1.5)return'#e31a1c';if(v<=-1)return'#fd8d3c';if(v<=-.5)return'#fecc5c';if(v<=.5)return'#d9f0a3';if(v<=1)return'#78c679';if(v<=1.5)return'#238443';if(v<=2)return'#005a32';return'#00264d'}
-function sK(v){if(v==null)return'N/A';if(v<=-2)return'Sangat Kering';if(v<=-1.5)return'Kering Parah';if(v<=-1)return'Kering Sedang';if(v<=-.5)return'Kering Ringan';if(v<=.5)return'Normal';if(v<=1)return'Basah Ringan';if(v<=1.5)return'Basah Sedang';if(v<=2)return'Basah Parah';return'Sangat Basah'}
-let map,gL,gD,iklimData={},cM={},aF='all',kS={},selYear=2024,spiDJF=null,spiJJA=null,spiDJFD=null,spiJJAD=null;
+const KC=['#22d3ee','#4ade80','#fbbf24','#f87171','#a78bfa','#fb923c','#34d399','#60a5fa','#f472b6','#a3e635','#e879f9','#38bdf8','#facc15','#2dd4bf','#c084fc','#fb7185','#84cc16','#818cf8','#f97316','#06b6d4','#10b981','#8b5cf6','#ef4444','#14b8a6','#eab308','#6366f1','#ec4899','#0ea5e9','#d946ef','#f59e0b','#3b82f6','#22c55e','#e11d48','#7c3aed','#0d9488','#ca8a04','#9333ea','#dc2626','#059669','#1d4ed8','#b91c1c','#15803d','#4338ca','#be185d','#0e7490','#854d0e','#6d28d9','#991b1b','#166534','#7c2d12','#9a3412'];
+function sC(v){if(v==null)return'#444';if(v<=-2)return'#730000';if(v<=-1.5)return'#e31a1c';if(v<=-1)return'#fd8d3c';if(v<=-.5)return'#fecc5c';if(v<=.5)return'#d9f0a3';if(v<=1)return'#78c679';if(v<=1.5)return'#238443';if(v<=2)return'#005a32';return'#00264d'}
+function sKat(v){if(v==null)return'N/A';if(v<=-2)return'Sangat Kering';if(v<=-1.5)return'Kering Parah';if(v<=-1)return'Kering Sedang';if(v<=-.5)return'Kering Ringan';if(v<=.5)return'Normal';if(v<=1)return'Basah Ringan';if(v<=1.5)return'Basah Sedang';if(v<=2)return'Basah Parah';return'Sangat Basah'}
+let map,gL,gD,iD={},cM={},aF='all',kS={},selYear=2024,mapColorMode='none',lastKec=null;
 map=L.map('map',{center:[-6.95,106.8],zoom:10,zoomControl:false});
 L.control.zoom({position:'topright'}).addTo(map);
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO',maxZoom:19}).addTo(map);
 
 async function init(){
 try{
-const[sR,iR,d1,d2]=await Promise.all([fetch('sawah_sukabumi.geojson'),fetch('iklim_kecamatan.csv'),fetch('spi_djf.geojson').catch(()=>null),fetch('spi_jja.geojson').catch(()=>null)]);
+const[sR,iR]=await Promise.all([fetch('sawah_sukabumi.geojson'),fetch('iklim_kecamatan.csv')]);
 gD=await sR.json();
-const csvText=await iR.text();
-parseIklim(csvText);
-if(d1)spiDJFD=await d1.json();
-if(d2)spiJJAD=await d2.json();
-processData();
-buildYearSelect();
-renderMap();
-renderSidebar();
+parseIklim(await iR.text());
+processData();buildYearSelect();
+setMapColor('none');
+renderMap();renderSidebar();
 document.getElementById('ld').classList.add('h');
-}catch(e){document.querySelector('.lt').textContent='Error: '+e.message;console.error(e)}
-}
+}catch(e){document.querySelector('.lt').textContent='Error: '+e.message;console.error(e)}}
 
 function parseIklim(csv){
 const lines=csv.trim().split('\n');
-const hdr=lines[0].split(',');
 for(let i=1;i<lines.length;i++){
 const v=lines[i].split(',');
 const kec=v[0],yr=parseInt(v[1]);
-if(!iklimData[kec])iklimData[kec]={};
-iklimData[kec][yr]={CH_DJF:+v[2]||null,R10_DJF:+v[3]||null,R20_DJF:+v[4]||null,SPI_DJF:+v[5]||null,CH_JJA:+v[6]||null,R10_JJA:+v[7]||null,R20_JJA:+v[8]||null,SPI_JJA:+v[9]||null};
-}}
+if(!iD[kec])iD[kec]={};
+iD[kec][yr]={cd:+v[2]||null,r1d:+v[3]||null,r2d:+v[4]||null,sd:+v[5]||null,cj:+v[6]||null,r1j:+v[7]||null,r2j:+v[8]||null,sj:+v[9]||null}}}
 
 function processData(){
 let ks=new Set(),ci=0;
 gD.features.forEach(f=>{
 const k=f.properties.Kecamatan||'?',kk=f.properties.Kab_Kota||'',l=f.properties.Luas_ha||0;
-if(!cM[k]){cM[k]=C[ci%C.length];ci++}
+if(!cM[k]){cM[k]=KC[ci%KC.length];ci++}
 if(!kS[k])kS[k]={kk,count:0,tl:0};
-kS[k].count++;kS[k].tl+=l;ks.add(k);
-});
+kS[k].count++;kS[k].tl+=l;ks.add(k)});
 const tl=Object.values(kS).reduce((s,k)=>s+k.tl,0);
 document.getElementById('sP').textContent=gD.features.length.toLocaleString('id');
 document.getElementById('sK').textContent=ks.size;
-document.getElementById('sL').textContent=tl.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
-}
+document.getElementById('sL').textContent=tl.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.')}
 
 function buildYearSelect(){
 const sel=document.getElementById('selYear');
-const years=new Set();
-Object.values(iklimData).forEach(kd=>Object.keys(kd).forEach(y=>years.add(+y)));
-const sorted=[...years].sort((a,b)=>b-a);
-sorted.forEach(y=>{const o=document.createElement('option');o.value=y;o.textContent=y;if(y===2024)o.selected=true;sel.appendChild(o)});
-sel.addEventListener('change',()=>{selYear=+sel.value;showClimatePanel(lastKec)});
-}
+const yrs=new Set();Object.values(iD).forEach(d=>Object.keys(d).forEach(y=>yrs.add(+y)));
+[...yrs].sort((a,b)=>b-a).forEach(y=>{const o=document.createElement('option');o.value=y;o.textContent=y;if(y===2024)o.selected=true;sel.appendChild(o)});
+sel.addEventListener('change',()=>{selYear=+sel.value;renderMap();showClimatePanel(lastKec)})}
 
-let lastKec=null;
-function showClimatePanel(kec){
-lastKec=kec;
-const cp=document.getElementById('cpanel');
-if(!kec||!iklimData[kec]){cp.innerHTML='<div class="cp-card"><div class="cp-title">Pilih kecamatan untuk melihat data iklim</div></div>';return}
-const d=iklimData[kec][selYear];
-if(!d){cp.innerHTML=`<div class="cp-card"><div class="cp-title">${kec} — ${selYear}</div><div style="color:var(--t3);font-size:12px">Data tidak tersedia untuk tahun ini</div></div>`;return}
-const spiDC=d.SPI_DJF!=null?sC(d.SPI_DJF):'#666';
-const spiJC=d.SPI_JJA!=null?sC(d.SPI_JJA):'#666';
-cp.innerHTML=`
-<div class="cp-card"><div class="cp-title">📍 ${kec} — ${selYear}</div>
-<div style="font-size:11px;color:var(--t3);margin-bottom:10px">Musim Hujan (DJF: Des-Jan-Feb)</div>
-<div class="cp-grid">
-<div class="cp-item"><div class="cp-val">${d.CH_DJF!=null?d.CH_DJF.toFixed(0):'-'}</div><div class="cp-lab">CH (mm)</div></div>
-<div class="cp-item"><div class="cp-val">${d.R10_DJF!=null?d.R10_DJF.toFixed(1):'-'}</div><div class="cp-lab">R10mm (hari)</div></div>
-<div class="cp-item"><div class="cp-val">${d.R20_DJF!=null?d.R20_DJF.toFixed(1):'-'}</div><div class="cp-lab">R20mm (hari)</div></div>
-<div class="cp-item"><div class="cp-val">${d.SPI_DJF!=null?d.SPI_DJF.toFixed(2):'-'}</div><div class="cp-lab">SPI-3</div></div>
-</div>
-<div style="text-align:center;margin-top:6px"><span class="cp-spi" style="background:${spiDC};color:#fff">${sK(d.SPI_DJF)}</span></div>
-</div>
-<div class="cp-card">
-<div style="font-size:11px;color:var(--t3);margin-bottom:10px">Musim Kemarau (JJA: Jun-Jul-Agu)</div>
-<div class="cp-grid">
-<div class="cp-item"><div class="cp-val">${d.CH_JJA!=null?d.CH_JJA.toFixed(0):'-'}</div><div class="cp-lab">CH (mm)</div></div>
-<div class="cp-item"><div class="cp-val">${d.R10_JJA!=null?d.R10_JJA.toFixed(1):'-'}</div><div class="cp-lab">R10mm (hari)</div></div>
-<div class="cp-item"><div class="cp-val">${d.R20_JJA!=null?d.R20_JJA.toFixed(1):'-'}</div><div class="cp-lab">R20mm (hari)</div></div>
-<div class="cp-item"><div class="cp-val">${d.SPI_JJA!=null?d.SPI_JJA.toFixed(2):'-'}</div><div class="cp-lab">SPI-3</div></div>
-</div>
-<div style="text-align:center;margin-top:6px"><span class="cp-spi" style="background:${spiJC};color:#fff">${sK(d.SPI_JJA)}</span></div>
-</div>`;
-}
+function getPoligonColor(kec){
+if(mapColorMode==='none')return cM[kec]||'#444';
+const d=iD[kec]?iD[kec][selYear]:null;
+if(!d)return'#333';
+const v=mapColorMode==='djf'?d.sd:d.sj;
+return sC(v)}
 
 function renderMap(fk=null){
 if(gL)map.removeLayer(gL);
 gL=L.geoJSON(gD,{
 filter:f=>{const kk=f.properties.Kab_Kota||'',k=f.properties.Kecamatan||'';if(aF!=='all'&&kk!==aF)return false;if(fk&&k!==fk)return false;return true},
-style:f=>({fillColor:cM[f.properties.Kecamatan||'?'],weight:.8,opacity:.9,color:'#ffffff30',fillOpacity:.7}),
-onEachFeature:(f,l)=>{const p=f.properties;
-l.bindPopup(`<div class="pt">${p.Kecamatan||'-'}</div><div class="pr"><span class="pl">Kab/Kota</span><span class="pv">${p.Kab_Kota||'-'}</span></div><div class="pr"><span class="pl">ID Poligon</span><span class="pv">${p.ID_Poligon||'-'}</span></div><div class="pr"><span class="pl">Luas (m²)</span><span class="pv">${p.Luas_m2?p.Luas_m2.toLocaleString('id'):'-'}</span></div><div class="pr"><span class="pl">Luas (ha)</span><span class="pv">${p.Luas_ha?p.Luas_ha.toFixed(4):'-'}</span></div>`);
-l.on('mouseover',function(){this.setStyle({weight:2,color:'#22d3ee',fillOpacity:.9})});
+style:f=>{const kec=f.properties.Kecamatan||'?';return{fillColor:getPoligonColor(kec),weight:.8,opacity:.9,color:'#ffffff30',fillOpacity:.75}},
+onEachFeature:(f,l)=>{const p=f.properties;const kec=p.Kecamatan||'-';
+const d=iD[kec]?iD[kec][selYear]:null;
+let popup=`<div class="pt">${kec}</div>
+<div class="pr"><span class="pl">Kab/Kota</span><span class="pv">${p.Kab_Kota||'-'}</span></div>
+<div class="pr"><span class="pl">ID Poligon</span><span class="pv">${p.ID_Poligon||'-'}</span></div>
+<div class="pr"><span class="pl">Luas (ha)</span><span class="pv">${p.Luas_ha?p.Luas_ha.toFixed(4):'-'}</span></div>`;
+if(d){
+popup+=`<div class="p-divider"></div><div class="p-section">🌧 Iklim ${selYear} — Musim Hujan (DJF)</div>
+<div class="pr"><span class="pl">Curah Hujan</span><span class="pv">${d.cd!=null?d.cd.toFixed(0)+' mm':'-'}</span></div>
+<div class="pr"><span class="pl">R10mm / R20mm</span><span class="pv">${d.r1d!=null?d.r1d.toFixed(1):'-'} / ${d.r2d!=null?d.r2d.toFixed(1):'-'} hari</span></div>
+<div class="pr"><span class="pl">SPI-3</span><span class="pv">${d.sd!=null?d.sd.toFixed(2):'-'} <span class="p-spi" style="background:${sC(d.sd)};color:#fff">${sKat(d.sd)}</span></span></div>
+<div class="p-section">☀️ Musim Kemarau (JJA)</div>
+<div class="pr"><span class="pl">Curah Hujan</span><span class="pv">${d.cj!=null?d.cj.toFixed(0)+' mm':'-'}</span></div>
+<div class="pr"><span class="pl">R10mm / R20mm</span><span class="pv">${d.r1j!=null?d.r1j.toFixed(1):'-'} / ${d.r2j!=null?d.r2j.toFixed(1):'-'} hari</span></div>
+<div class="pr"><span class="pl">SPI-3</span><span class="pv">${d.sj!=null?d.sj.toFixed(2):'-'} <span class="p-spi" style="background:${sC(d.sj)};color:#fff">${sKat(d.sj)}</span></span></div>`}
+l.bindPopup(popup);
+l.on('mouseover',function(){this.setStyle({weight:2.5,color:'#22d3ee',fillOpacity:.9})});
 l.on('mouseout',function(){gL.resetStyle(this)});
-l.on('click',function(){showClimatePanel(p.Kecamatan);document.querySelectorAll('.tab').forEach(t=>t.classList.remove('a'));document.querySelectorAll('.tc').forEach(t=>t.classList.remove('a'));document.querySelector('[data-t="iklim"]').classList.add('a');document.getElementById('t-iklim').classList.add('a')});
-}}).addTo(map);
-if(gL.getLayers().length>0)map.fitBounds(gL.getBounds(),{padding:[20,20]});
-}
+l.on('click',function(){showClimatePanel(kec);document.querySelectorAll('.tab').forEach(t=>t.classList.remove('a'));document.querySelectorAll('.tc').forEach(t=>t.classList.remove('a'));document.querySelector('[data-t="iklim"]').classList.add('a');document.getElementById('t-iklim').classList.add('a')})}
+}).addTo(map);
+if(gL.getLayers().length>0&&!fk)map.fitBounds(gL.getBounds(),{padding:[20,20]})}
 
-function createSPILayer(d){return L.geoJSON(d,{style:f=>({fillColor:sC(f.properties.SPI),weight:.5,opacity:.6,color:'#ffffff20',fillOpacity:.5}),onEachFeature:(f,l)=>{const p=f.properties;l.bindPopup(`<div class="pt">${p.Layer}</div><div class="pr"><span class="pl">SPI</span><span class="pv">${p.SPI.toFixed(4)}</span></div><div class="pr"><span class="pl">Kategori</span><span class="pv">${p.Kategori}</span></div>`)}})}
+function setMapColor(mode){
+mapColorMode=mode;
+document.querySelectorAll('#btnColNone,#btnColDJF,#btnColJJA').forEach(b=>b.classList.remove('a'));
+if(mode==='none')document.getElementById('btnColNone').classList.add('a');
+else if(mode==='djf')document.getElementById('btnColDJF').classList.add('a');
+else document.getElementById('btnColJJA').classList.add('a');
+renderMap()}
 
-function toggleSPI(n){
-if(n==='djf'){if(spiDJF&&map.hasLayer(spiDJF)){map.removeLayer(spiDJF);document.getElementById('btnDJF').classList.remove('a')}else if(spiDJFD){if(!spiDJF)spiDJF=createSPILayer(spiDJFD);spiDJF.addTo(map);document.getElementById('btnDJF').classList.add('a')}}
-else{if(spiJJA&&map.hasLayer(spiJJA)){map.removeLayer(spiJJA);document.getElementById('btnJJA').classList.remove('a')}else if(spiJJAD){if(!spiJJA)spiJJA=createSPILayer(spiJJAD);spiJJA.addTo(map);document.getElementById('btnJJA').classList.add('a')}}
-}
+function showClimatePanel(kec){
+lastKec=kec;const cp=document.getElementById('cpanel');
+if(!kec||!iD[kec]){cp.innerHTML='<div class="cp-card"><div class="cp-title">Pilih kecamatan</div></div>';return}
+const d=iD[kec][selYear];
+if(!d){cp.innerHTML=`<div class="cp-card"><div class="cp-title">${kec} — ${selYear}</div><div style="color:var(--t3);font-size:12px">Data tidak tersedia</div></div>`;return}
+cp.innerHTML=`
+<div class="cp-card"><div class="cp-title">📍 ${kec} — ${selYear}</div>
+<div style="font-size:11px;color:var(--t3);margin-bottom:8px">🌧 Musim Hujan (DJF)</div>
+<div class="cp-grid">
+<div class="cp-item"><div class="cp-val">${d.cd!=null?d.cd.toFixed(0):'-'}</div><div class="cp-lab">CH (mm)</div></div>
+<div class="cp-item"><div class="cp-val">${d.r1d!=null?d.r1d.toFixed(1):'-'}</div><div class="cp-lab">R10mm</div></div>
+<div class="cp-item"><div class="cp-val">${d.r2d!=null?d.r2d.toFixed(1):'-'}</div><div class="cp-lab">R20mm</div></div>
+<div class="cp-item"><div class="cp-val">${d.sd!=null?d.sd.toFixed(2):'-'}</div><div class="cp-lab">SPI-3</div></div>
+</div>
+<div style="text-align:center;margin-top:6px"><span class="cp-spi" style="background:${sC(d.sd)};color:#fff">${sKat(d.sd)}</span></div>
+</div>
+<div class="cp-card">
+<div style="font-size:11px;color:var(--t3);margin-bottom:8px">☀️ Musim Kemarau (JJA)</div>
+<div class="cp-grid">
+<div class="cp-item"><div class="cp-val">${d.cj!=null?d.cj.toFixed(0):'-'}</div><div class="cp-lab">CH (mm)</div></div>
+<div class="cp-item"><div class="cp-val">${d.r1j!=null?d.r1j.toFixed(1):'-'}</div><div class="cp-lab">R10mm</div></div>
+<div class="cp-item"><div class="cp-val">${d.r2j!=null?d.r2j.toFixed(1):'-'}</div><div class="cp-lab">R20mm</div></div>
+<div class="cp-item"><div class="cp-val">${d.sj!=null?d.sj.toFixed(2):'-'}</div><div class="cp-lab">SPI-3</div></div>
+</div>
+<div style="text-align:center;margin-top:6px"><span class="cp-spi" style="background:${sC(d.sj)};color:#fff">${sKat(d.sj)}</span></div>
+</div>`}
 
 function renderSidebar(st=''){
 const el=document.getElementById('kL');el.innerHTML='';
@@ -245,10 +246,8 @@ Object.entries(kS).filter(([k,s])=>{if(aF!=='all'&&s.kk!==aF)return false;if(st&
 const d=document.createElement('div');d.className='ki';
 d.innerHTML=`<div class="kc" style="background:${cM[k]}"></div><div style="flex:1;min-width:0"><div class="kn">${k}</div><div class="kd">${s.count} pol · ${s.kk==='Kota Sukabumi'?'Kota':'Kab'}</div></div><div class="kv">${s.tl.toFixed(1)} ha</div>`;
 d.addEventListener('click',()=>{renderMap(k);showClimatePanel(k)});
-el.appendChild(d)});
-}
+el.appendChild(d)})}
 
-// Events
 document.querySelectorAll('.tab').forEach(b=>{b.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('a'));document.querySelectorAll('.tc').forEach(x=>x.classList.remove('a'));b.classList.add('a');document.getElementById('t-'+b.dataset.t).classList.add('a')})});
 document.getElementById('fKK').addEventListener('click',e=>{if(!e.target.classList.contains('fb'))return;document.querySelectorAll('#fKK .fb').forEach(b=>b.classList.remove('a'));e.target.classList.add('a');aF=e.target.dataset.f;renderMap();renderSidebar(document.getElementById('src').value)});
 document.getElementById('src').addEventListener('input',e=>renderSidebar(e.target.value));
